@@ -1,12 +1,10 @@
 const signToken = require("../utils_JWT/jwt");
 const User = require("../models/User");
 
-// 1. Register Controller
 const register = async (request, response, next) => {
     try {
-        const { name, email, password } = request.body;
+        const { name, email, password, role } = request.body;
 
-        // التحقق من وجود المستخدم (Mongoose handle unique usually, but this is safer for custom messages)
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             const error = new Error("A user with this email already exists");
@@ -14,14 +12,14 @@ const register = async (request, response, next) => {
             return next(error);
         }
 
-        // إنشاء المستخدم
-        const user = await User.create({ name, email, password });
+        const user = await User.create({ 
+            name, 
+            email, 
+            password, 
+            role 
+        });
 
-        // توليد التوكن
         const token = signToken(user._id, user.role);
-
-        // إخفاء كلمة السر من الرد لزيادة الأمان
-        user.password = undefined;
 
         return response.status(201).json({
             success: true,
