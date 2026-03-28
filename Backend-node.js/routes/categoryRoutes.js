@@ -12,7 +12,6 @@ const {
 router.get("/", getAllCategories);
 router.get("/:id", getCategoryById);
 
-// Restricted to Admin
 router.post("/", protect, authorize('admin'), categoryValidation(), createCategory);
 router.put("/:id", protect, authorize('admin'), categoryValidation(), updateCategory);
 router.delete("/:id", protect, authorize('admin'), deleteCategory);

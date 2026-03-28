@@ -3,7 +3,6 @@ const categorySchema = require("../validators/categoryValidation");
 
 const productValidation = () => {
     return (request, response, next) => {
-        // Ensure productSchema is imported here
         const { error } = productSchema.validate(request.body, { abortEarly: false });
         
         if (error) {
@@ -18,16 +17,10 @@ const productValidation = () => {
 
 const categoryValidation = () => {
     return (request, response, next) => {
-        const { error } = categorySchema.validate(
-            request.body,
-            {
-                abortEarly: false
-            }
-        );
+        const { error } = categorySchema.validate(request.body, { abortEarly: false } );
         
         if (error) {
-            const errorMessage = error.details.map(detail => detail.message)
-                                              .join(', ');
+            const errorMessage = error.details.map(detail => detail.message).join(', ');
             const validationError = new Error(errorMessage);
             validationError.statusCode = 400;
             return next(validationError);

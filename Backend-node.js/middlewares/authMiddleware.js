@@ -33,10 +33,9 @@ const protect = async (request, response, next) => {
     }
 };
 
-// Now 'authorize' automatically checks request.user.role
 const authorize = (...roles) => {
     return (request, response, next) => {
-        // If no roles specified, or if user role matches one of the allowed roles
+        
         if (roles.length > 0 && !roles.includes(request.user.role)) {
             const error = new Error(`Role (${request.user.role}) is not authorized`);
             error.statusCode = 403;

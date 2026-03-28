@@ -12,6 +12,7 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 
 const app = express();
 
+// Allow react project
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true,
@@ -19,9 +20,10 @@ app.use(cors({
 
 // log file
 const accessLogStream = rfs.createStream('access.log', {
-  interval: '1d', // ملف جديد كل يوم
+  interval: '1d',
   path: path.join(__dirname, 'logs')
 });
+
 // General Middleware
 
 // Logger middleware
@@ -41,12 +43,13 @@ app.use(session({
     resave: false,              // Only saves the session if something changed
     saveUninitialized: false,   // Only creates a session cookie once you actually store data
     cookie: {
-        httpOnly: true,// It prevents malicious scripts (XSS attacks) from stealing the session cookie via document.cookie
+        httpOnly: true, // It prevents malicious scripts (XSS attacks) from stealing the session cookie via document.cookie
         secure: process.env.NODE_ENV === "production",  // Not work unless on production only
-        maxAge: 1000 * 60 * 60 * 24     // Session lifetime = 24 hourse (in milliseconds)
+        maxAge: 1000 * 60 * 60 * 24                     // Session lifetime = 24 hourse (in milliseconds)
     },
 }));
 
+// App Routes
 app.use("/auth", authRoutes);
 app.use("/products", productsRoutes);
 app.use("/category", categoryRoutes);

@@ -35,7 +35,7 @@ const regesterValidation = (request, response, next) => {
 
     if(error) {
         const messages = error.details.map((d) => d.message);
-        return response.status(422).json({ // Use 'response', not 'res'
+        return response.status(422).json({
             success: false,
             message: "Validation failed",
             errors: messages,
