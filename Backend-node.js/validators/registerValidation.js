@@ -31,7 +31,7 @@ const regesterSchema = Joi.object({
 
 
 const regesterValidation = (request, response, next) => {
-    const { error } = regesterSchema.validate(request.body, { abortEarly: false });
+    const { error, value } = regesterSchema.validate(request.body, { abortEarly: false });
 
     if(error) {
         const messages = error.details.map((d) => d.message);
@@ -41,6 +41,8 @@ const regesterValidation = (request, response, next) => {
             errors: messages,
         });
     }
+
+    request.body = value;
     next();
 };
 

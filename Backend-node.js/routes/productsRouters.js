@@ -1,7 +1,10 @@
 const router = require("express").Router();
 const { protect, authorize } = require("../middlewares/authMiddleware");
-const { productValidation } = require("../middlewares/validatorMiddleware");
+const { Validation } = require("../middlewares/validatorMiddleware");
+const productValidationSchema = require("../validators/productValidation");
+
 const upload = require('../middlewares/uploadMiddleware');
+
 const {
     getAllProducts,
     getProductByID,
@@ -13,10 +16,10 @@ const {
 router.get("/", getAllProducts);
 router.get("/:id", getProductByID);
 
-router.post("/", protect, authorize('admin'), productValidation(), createProduct);
-router.put("/:id", protect, authorize('admin'), productValidation(), updateProduct);
+router.post("/", protect, authorize('admin'), Validation(productValidationSchema), createProduct);
+router.put("/:id", protect, authorize('admin'), Validation(productValidationSchema), updateProduct);
 router.delete("/:id", protect, authorize('admin'), deleteProduct);
 
-router.post("/", protect, authorize('admin'), upload.single('image'), productValidation, createProduct);
+router.post("/", protect, authorize('admin'), upload.single('image'), Validation(productValidationSchema), createProduct);
 
 module.exports = router;

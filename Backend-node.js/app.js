@@ -27,7 +27,10 @@ const accessLogStream = rfs.createStream('access.log', {
 // General Middleware
 
 // Logger middleware
-app.use(morgan('combined', { stream: accessLogStream }));
+app.use(morgan('combined', {
+  stream: accessLogStream
+}));
+
 app.use(morgan("dev"));
 
 // parse to json form. takes => {"name": "Alice"} and returns => req.body.name
@@ -35,7 +38,6 @@ app.use(express.json());
 
 // parse to json form to but from form method. takes => name=Alice&age=25 and returns => req.body.name
 app.use(express.urlencoded({extended: true}));
-
 
 // session creation and cookie
 app.use(session({
