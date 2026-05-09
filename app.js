@@ -89,6 +89,21 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
 
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const dbState = mongoose.connection.readyState;
+    // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+    if (dbState === 1) {
+      res.json({ success: true, message: 'Database is connected', state: 'connected' });
+    } else {
+      res.json({ success: false, message: 'Database is not connected', state: mongoose.connection.states[dbState] });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ----------------------------- Root Route -----------------------------
 app.get('/', (req, res) => {
   res.send('E-Commerce API is running...');
