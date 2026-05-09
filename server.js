@@ -1,2 +1,2 @@
-const app = require('./test-app');
+const app = require('./app'); // or require from the correct path
 module.exports = app;
