@@ -13,9 +13,14 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 const app = express();
 
 // Allow react project
+const allowedOrigins = [
+  'http://e-commerce-frontend-react-final-pro.vercel.app',               // local development
+  process.env.FRONTEND_URL               // production frontend URL from env
+].filter(Boolean);
+
 app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
+  origin: allowedOrigins,
+  credentials: true
 }));
 
 // log file
