@@ -1,24 +1,21 @@
 const multer = require('multer');
-const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
-const storage = multer.diskStorage({
-    destination: (request, file, cb) => {
-        cb(null, 'uploads/'); 
-    },
-    filename: (request, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `${file.fieldname}-${Date.now()}${ext}`);
-    }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const fileFilter = (request, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        cb(new Error('Not an image! Please upload only images.'), false);
-    }
-};
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'ecommerce-products',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+  }
+});
 
-const upload = multer({ storage, fileFilter });
-
+const upload = multer({ storage });
 module.exports = upload;
