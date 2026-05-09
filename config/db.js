@@ -1,16 +1,22 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const connectDB = async () => {
-    try{
-        const connection = await mongoose.connect(
-            process.env.MONGO_URL || "mongodb://localhost:27017/e-commerceDB"
-        );
-
-        console.log(`MongoDB Connected: ${connection.connection.host}`);
-    } catch(error) {
-        console.error(`MongoDB connection error: ${error.message}`);
-        process.exit(1);
+  try {
+    const mongoUri = process.env.MONGO_URL;
+    if (!mongoUri) {
+      throw new Error('MONGO_URL environment variable is not defined');
     }
-} 
+    
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ MongoDB connected successfully');
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error.message);
+    // Do NOT throw the error – let the function handle it gracefully
+    return Promise.reject(error);
+  }
+};
 
 module.exports = connectDB;
