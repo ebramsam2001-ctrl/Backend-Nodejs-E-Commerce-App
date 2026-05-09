@@ -3,11 +3,9 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const path = require('path');
-const fs = require('fs');
-const rfs = require('rotating-file-stream');
+const mongoose = require('mongoose');
 
-const connectDB = require('./config/db');
+// Import route modules
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -19,62 +17,47 @@ const wishlistRoutes = require('./routes/wishlistRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+
+// Error middleware
 const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
 
 const app = express();
 
-// ----------------------------- DB Connection -----------------------------
-connectDB();
+// ----------------------------- MongoDB Connection -----------------------------
+// Connect without blocking the function startup; Vercel will keep the promise
+const connectDB = require('./config/db');
+connectDB().catch(err => {
+  console.error('❌ MongoDB initial connection failed:', err.message);
+  // Do not throw – let the function try again on next invocation
+});
 
 // ----------------------------- CORS Configuration -----------------------------
 const allowedOrigins = [
-  'http://localhost:5173',               // Vite default
-  'http://localhost:3000',               // React default
-  process.env.FRONTEND_URL               // Your production frontend URL from env
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, etc.)
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('CORS not allowed'));
     }
   },
   credentials: true
 }));
 
-// ----------------------------- Middleware -----------------------------
+// ----------------------------- Standard Middleware -----------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ----------------------------- Logging -----------------------------
-// Console logging for all environments
-app.use(morgan('dev'));
-
-// File logging only in development (Vercel's filesystem is read-only in production)
-if (process.env.NODE_ENV !== 'production') {
-  const logDirectory = path.join(__dirname, 'logs');
-  // Ensure log directory exists
-  if (!fs.existsSync(logDirectory)) {
-    fs.mkdirSync(logDirectory, { recursive: true });
-  }
-  const accessLogStream = rfs.createStream('access.log', {
-    interval: '1d',
-    path: logDirectory
-  });
-  app.use(morgan('combined', { stream: accessLogStream }));
-}
-
-// ----------------------------- Static Files -----------------------------
-// Note: For uploaded files, use Cloudinary (not local disk) in production.
-// The following line serves local uploads only in development.
-if (process.env.NODE_ENV !== 'production') {
-  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-}
+// ----------------------------- Logging (console only, safe for serverless) -----------------------------
+app.use(morgan('dev')); // Logs to console – Vercel captures these logs
 
 // ----------------------------- Routes -----------------------------
 app.use('/api/auth', authRoutes);
@@ -89,24 +72,40 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
 
+// ----------------------------- Database Test Route -----------------------------
 app.get('/api/test-db', async (req, res) => {
   try {
-    const mongoose = require('mongoose');
-    const dbState = mongoose.connection.readyState;
-    // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
-    if (dbState === 1) {
-      res.json({ success: true, message: 'Database is connected', state: 'connected' });
+    const state = mongoose.connection.readyState;
+    const stateString = ['disconnected', 'connected', 'connecting', 'disconnecting'][state];
+    if (state === 1) {
+      // Optional: count a document to verify read ability
+      const User = require('./models/User');
+      const userCount = await User.countDocuments().catch(() => 'unavailable');
+      res.json({
+        success: true,
+        message: 'Database connected',
+        state: stateString,
+        userCount: userCount
+      });
     } else {
-      res.json({ success: false, message: 'Database is not connected', state: mongoose.connection.states[dbState] });
+      res.status(503).json({
+        success: false,
+        message: 'Database not ready',
+        state: stateString
+      });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Database test failed',
+      error: error.message
+    });
   }
 });
 
 // ----------------------------- Root Route -----------------------------
 app.get('/', (req, res) => {
-  res.send('E-Commerce API is running...');
+  res.send('E-Commerce API is running on Vercel');
 });
 
 // ----------------------------- Error Handling -----------------------------
